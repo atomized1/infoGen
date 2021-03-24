@@ -5,6 +5,7 @@ So your command line should look something like:
   infoGen.py B51315_invivoAPOE1_labels.nii.gz CHASSSYMM3_to_ABA.xlsx
   
 To upload this to neuroglancer:
+
   start up cors_webserver in a folder containing the info file, labels, and image
   Load in the image via nifti method, as an image
   Load in the labels via nifti method, as a segmentation
