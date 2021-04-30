@@ -74,34 +74,29 @@ def main():
     volume_to_precomputed(argv=["Placeholder", os.path.normpath(os.path.join(dirnam, sys.argv[1])), "Output"])
     compute_scales(argv=["Placeholder", "Output", "--downscaling-method=majority"])
 
-    shutil.move(str(os.path.join(os.getcwd(), "Output")), str(os.path.join(dirnam, "Output")))
+    outputDir = os.path.join(dirnam, "Output")
+    shutil.move(os.path.join(os.getcwd(), "Output"), outputDir)
 
-    for subdir, dirs, files in os.walk(os.path.join(dirnam, "Output\\100um")):
-        #print(subdir)
-        for file in files:
-            #print(file)
-            subdirSplit = subdir.split("\\")
-            fileSplit = file.split(".")
-            fileName = subdirSplit[-2] + "_" + subdirSplit[-1] + "_" + fileSplit[0]
-            print(os.path.join(subdir, file))
-            fin = gzip.open(os.path.join(subdir, file), "r")
-            fout = open(os.path.join(dirnam, "Output/100um/", fileName), "wb")
-            data = fin.read()
-            fout.write(data)
+    #We need to flatten the directory path - "0-64/0-64" goes to "0-64_0-64"
+    def restructureDirectory(currentDir):
+        for root, dirs, files in os.walk(currentDir, topdown=False):
+           for name in files:
+              if (name.endswith(".gz")):
+                  path = os.path.join(root, name)
+                  relativePath = path[len(currentDir) + 1:]
+                  components = relativePath.split(os.sep)
+                  reformatedName = "_".join(components)
+                  reformattedPath = os.path.join(currentDir, reformatedName)
 
-    for subdir, dirs, files in os.walk(os.path.join(dirnam, "Output\\200um")):
-        # print(subdir)
-        for file in files:
-            # print(file)
-            subdirSplit = subdir.split("\\")
-            fileSplit = file.split(".")
-            fileName = subdirSplit[-2] + "_" + subdirSplit[-1] + "_" + fileSplit[0]
-            print(os.path.join(subdir, file))
-            fin = gzip.open(os.path.join(subdir, file), "r")
-            fout = open(os.path.join(dirnam, "Output/200um/", fileName), "wb")
-            data = fin.read()
-            fout.write(data)
+                  noGzipPath = reformattedPath[:-len(".gz")]
 
+                  fin = gzip.open(path, "r")
+                  fout = open(noGzipPath, "wb")
+                  fout.write(fin.read())
+                  #os.remove(path) #If we're going to remove the files, we shold also recurse through the directories and remove them if empty. 
+
+    restructureDirectory(os.path.join(outputDir, "100um"))
+    restructureDirectory(os.path.join(outputDir, "200um"))
 
 if __name__ == "__main__":
     main()
